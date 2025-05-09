@@ -1,7 +1,6 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
-
 }
 
 datasource db {
@@ -20,4 +19,16 @@ model Category {
   type      CategoryType
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+
+  @@map("Categories")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  Password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("Users")
 }

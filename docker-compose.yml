@@ -1,11 +1,11 @@
 services:
   db:
-    image: postgres:15 # можно указать нужную версию
+    image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: user # замените на своего пользователя
-      POSTGRES_PASSWORD: pass # замените на свой пароль
-      POSTGRES_DB: mydb # замените на имя БД
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydb
     ports:
       - '5432:5432'
     volumes:

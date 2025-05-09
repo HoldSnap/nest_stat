@@ -10,5 +10,15 @@
       "username": "user",
       "name": "asd"
     }
-  ]
+  ],
+
+  // --- ниже добавляем поддержку Prisma ---
+  // settings.json
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
 }
