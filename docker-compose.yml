@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:15 # можно указать нужную версию
+    restart: always
+    environment:
+      POSTGRES_USER: user # замените на своего пользователя
+      POSTGRES_PASSWORD: pass # замените на свой пароль
+      POSTGRES_DB: mydb # замените на имя БД
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
