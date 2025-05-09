@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // теперь ES2020
+    "module": "commonjs", // либо "esnext" для ESM
+    "rootDir": "./src", // папка с исходниками
+    "outDir": "./dist", // куда писать скомпилированный JS
+    "strict": true, // все строгие проверки
+    "esModuleInterop": true, // удобный импорт CommonJS-модулей
+    "experimentalDecorators": true, // включаем декораторы
+    "emitDecoratorMetadata": true // генерируем metadata для reflect-metadata
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
