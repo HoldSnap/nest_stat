@@ -3,9 +3,10 @@ import { CategoryService } from './category/category.service';
 import { CategoryModule } from './category/category.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, CategoryModule, UserModule],
+  imports: [PrismaModule, CategoryModule, UserModule, AuthModule],
   controllers: [],
   providers: [CategoryService],
 })
