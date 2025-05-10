@@ -1,26 +1,76 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Req,
+  Res,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  @HttpCode(HttpStatus.CREATED)
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { user, token } = await this.authService.register(dto);
+
+    res.cookie('Authentication', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 минут
+    });
+
+    return { user };
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  @HttpCode(HttpStatus.OK)
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { user, token } = await this.authService.login(dto);
+
+    res.cookie('Authentication', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    return { user };
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Post('profile')
-  getProfile(@Request() req: any) {
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  @HttpCode(HttpStatus.OK)
+  getProfile(@Req() req: Request) {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('Authentication', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
+    return { success: true };
   }
 }
