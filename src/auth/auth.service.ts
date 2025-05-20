@@ -1,3 +1,4 @@
+// src/auth/auth.service.ts
 import {
   Injectable,
   UnauthorizedException,
@@ -30,7 +31,8 @@ export class AuthService {
       const user = await this.prisma.user.create({
         data: { name: dto.name, password: hash },
       });
-      const token = this.buildToken(user.id);
+      // включаем name в JWT
+      const token = this.buildToken({ id: user.id, name: user.name });
       return { user: { id: user.id, name: user.name }, token };
     } catch (e) {
       if (
@@ -58,11 +60,13 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Неверные имя или пароль');
     }
-    const token = this.buildToken(user.id);
+    // включаем name в JWT
+    const token = this.buildToken({ id: user.id, name: user.name });
     return { user, token };
   }
 
-  private buildToken(userId: string) {
-    return this.jwt.sign({ sub: userId });
+  private buildToken(user: { id: string; name: string }): string {
+    // payload: { sub: user.id, name: user.name }
+    return this.jwt.sign({ sub: user.id, name: user.name });
   }
 }

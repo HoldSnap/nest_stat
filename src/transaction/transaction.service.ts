@@ -253,25 +253,33 @@ export class TransactionService {
     userId: string,
     start: Date,
     end: Date,
-  ): Promise<CategorySummary[]> {
+  ): Promise<(CategorySummary & { dates: Date[] })[]> {
     const transactions = await this.prisma.transaction.findMany({
       where: { userId, date: { gte: start, lte: end } },
       include: { categories: true },
     });
 
-    const map = new Map<string, { type: CategoryType; sum: number }>();
+    const map = new Map<
+      string,
+      { type: CategoryType; sum: number; dates: Date[] }
+    >();
     for (const tx of transactions) {
       const key = tx.categories.name;
       const amt = Number(tx.amount);
-      const prev = map.get(key);
-      if (prev) prev.sum += amt;
-      else map.set(key, { type: tx.categories.type, sum: amt });
+      if (map.has(key)) {
+        const summary = map.get(key)!;
+        summary.sum += amt;
+        summary.dates.push(tx.date);
+      } else {
+        map.set(key, { type: tx.categories.type, sum: amt, dates: [tx.date] });
+      }
     }
 
-    return Array.from(map.entries()).map(([name, { type, sum }]) => ({
+    return Array.from(map.entries()).map(([name, { type, sum, dates }]) => ({
       categoryName: name,
       categoryType: type === CategoryType.INCOME ? 'Пополнение' : 'Трата',
       totalAmount: sum,
+      dates: dates.sort((a, b) => a.getTime() - b.getTime()),
     }));
   }
 }

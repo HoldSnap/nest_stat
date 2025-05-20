@@ -43,7 +43,7 @@ export class TransactionController {
     if (!Array.isArray(transactions)) {
       throw new BadRequestException('Body must be an array');
     }
-    await this.transactionService.importFromJson(transactions, req.user.userId);
+    await this.transactionService.importFromJson(transactions, req.user.id);
     return { message: 'JSON import completed', count: transactions.length };
   }
 
@@ -69,7 +69,7 @@ export class TransactionController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: any,
   ) {
-    await this.transactionService.importFromExcel(file.buffer, req.user.userId);
+    await this.transactionService.importFromExcel(file.buffer, req.user.id);
     return { message: 'Excel import completed' };
   }
 
@@ -89,7 +89,7 @@ export class TransactionController {
       );
     }
     return this.transactionService.getCategorySummary(
-      req.user.userId,
+      req.user.id,
       new Date(startDate),
       new Date(endDate),
     );
@@ -111,7 +111,7 @@ export class TransactionController {
       );
     }
     return this.transactionService.getStats(
-      req.user.userId,
+      req.user.id,
       new Date(startDate),
       new Date(endDate),
     );
@@ -134,7 +134,7 @@ export class TransactionController {
       );
     }
     const buffer = await this.transactionService.generatePdfReport(
-      req.user.userId,
+      req.user.id,
       new Date(startDate),
       new Date(endDate),
     );

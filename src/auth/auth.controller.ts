@@ -1,3 +1,4 @@
+// src/auth/auth.controller.ts
 import {
   Controller,
   Post,
@@ -26,14 +27,12 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, token } = await this.authService.register(dto);
-
     res.cookie('Authentication', token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 15 минут
+      maxAge: 15 * 60 * 1000,
     });
-
     return { user };
   }
 
@@ -44,14 +43,12 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, token } = await this.authService.login(dto);
-
     res.cookie('Authentication', token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       maxAge: 15 * 60 * 1000,
     });
-
     return { user };
   }
 
