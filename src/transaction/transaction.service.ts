@@ -12,6 +12,8 @@ export interface Stats {
   averageExpense: number;
   medianAmount: number;
   modeAmount: number[];
+  modeIncome: number[];
+  modeExpense: number[];
 }
 
 export interface CategorySummary {
@@ -130,6 +132,7 @@ export class TransactionService {
       orderBy: { date: 'asc' },
     });
 
+    // Собираем массивы сумм по типу
     const incomes = transactions
       .filter((t) => t.categories.type === CategoryType.INCOME)
       .map((t) => Number(t.amount));
@@ -137,29 +140,54 @@ export class TransactionService {
       .filter((t) => t.categories.type === CategoryType.EXPENSE)
       .map((t) => Number(t.amount));
 
+    // Функция для расчёта среднего
     const average = (arr: number[]) =>
       arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
     const averageIncome = average(incomes);
     const averageExpense = average(expenses);
 
+    // Медиана и мода по всем транзакциям
     const all = transactions.map((t) => Number(t.amount)).sort((a, b) => a - b);
 
-    const n = all.length;
+    // Медиана (по всем)
     let medianAmount = 0;
-    if (n > 0) {
-      const mid = Math.floor(n / 2);
-      medianAmount = n % 2 ? all[mid] : (all[mid - 1] + all[mid]) / 2;
+    if (all.length > 0) {
+      const mid = Math.floor(all.length / 2);
+      medianAmount = all.length % 2 ? all[mid] : (all[mid - 1] + all[mid]) / 2;
     }
 
-    const freq = new Map<number, number>();
-    all.forEach((val) => freq.set(val, (freq.get(val) || 0) + 1));
-    const maxFreq = Math.max(...freq.values(), 0);
-    const modeAmount = [...freq.entries()]
-      .filter(([, count]) => count === maxFreq)
+    // Мода (по всем)
+    const freqAll = new Map<number, number>();
+    all.forEach((val) => freqAll.set(val, (freqAll.get(val) || 0) + 1));
+    const maxFreqAll = Math.max(...freqAll.values(), 0);
+    const modeAmount = [...freqAll.entries()]
+      .filter(([, count]) => count === maxFreqAll)
       .map(([val]) => val);
 
-    return { averageIncome, averageExpense, medianAmount, modeAmount };
+    // Вспомогательная функция для вычисления моды массива чисел
+    const computeMode = (arr: number[]): number[] => {
+      if (!arr.length) return [];
+      const freq = new Map<number, number>();
+      arr.forEach((val) => freq.set(val, (freq.get(val) || 0) + 1));
+      const maxFreq = Math.max(...freq.values());
+      return [...freq.entries()]
+        .filter(([, count]) => count === maxFreq)
+        .map(([val]) => val);
+    };
+
+    // Отдельная мода для доходов и расходов
+    const modeIncome = computeMode(incomes);
+    const modeExpense = computeMode(expenses);
+
+    return {
+      averageIncome,
+      averageExpense,
+      medianAmount,
+      modeAmount,
+      modeIncome,
+      modeExpense,
+    };
   }
 
   /**
@@ -188,13 +216,25 @@ export class TransactionService {
     const buffers: Buffer[] = [];
     doc.on('data', (chunk) => buffers.push(chunk));
 
+    // Подготовка строк для мод (максимум по 3 значения)
+    const sliceModes = (arr: number[]): string => {
+      if (!arr.length) return '—';
+      return arr.slice(0, 3).join(', ');
+    };
+
+    const modeAllText = sliceModes(stats.modeAmount);
+    const modeIncomeText = sliceModes(stats.modeIncome);
+    const modeExpenseText = sliceModes(stats.modeExpense);
+
     // Заголовок
     doc.fontSize(18).text('Отчёт по транзакциям', { align: 'center' });
     doc.moveDown();
     doc
       .fontSize(12)
       .text(
-        `Период: ${start.toISOString().split('T')[0]} – ${end.toISOString().split('T')[0]}`,
+        `Период: ${start.toISOString().split('T')[0]} – ${
+          end.toISOString().split('T')[0]
+        }`,
       );
     doc.moveDown(1);
 
@@ -205,8 +245,10 @@ export class TransactionService {
       .fontSize(12)
       .text(`Средний доход: ${stats.averageIncome.toFixed(2)}`)
       .text(`Средний расход: ${stats.averageExpense.toFixed(2)}`)
-      .text(`Медиана: ${stats.medianAmount.toFixed(2)}`)
-      .text(`Мода: ${stats.modeAmount.join(', ')}`);
+      .text(`Медиана (все): ${stats.medianAmount.toFixed(2)}`)
+      .text(`Мода (все, макс 3): ${modeAllText}`)
+      .text(`Мода (доходы, макс 3): ${modeIncomeText}`)
+      .text(`Мода (расходы, макс 3): ${modeExpenseText}`);
     doc.moveDown(1);
 
     // Таблица транзакций
