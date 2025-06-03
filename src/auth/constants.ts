@@ -1,7 +1,7 @@
 export const jwtConstants = {
   accessSecret: process.env.JWT_ACCESS_SECRET || 'access_secret',
   refreshSecret: process.env.JWT_REFRESH_SECRET || 'refresh_secret',
-  accessExpiresIn: '15m',
+  accessExpiresIn: '150m',
   refreshExpiresIn: '7d',
 };
 
